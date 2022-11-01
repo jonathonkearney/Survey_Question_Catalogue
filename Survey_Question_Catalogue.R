@@ -11,14 +11,16 @@ rm(list = ls())
 
 setwd("C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue")
 
-#Sample size can be programatically obtained
-
 questions <- read.csv("Questions.csv", header = TRUE)
-questionData <- read.csv("Question_Data.csv", header = TRUE)
+questionData <- read.csv("Question_Data.csv", header = TRUE, check.names=FALSE)
 
+questions <- questions %>% mutate_all(na_if,"")
 questionData <- questionData %>% mutate_all(na_if,"")
 
-test <- as.data.frame(table(questionData$What.is.the.best.Premier.League.club.))
+tags <- list(questions$Tag1, questions$Tag2, questions$Tag3, questions$Tag4)
+tags <- Reduce(c,tags)
+tags <- unique(tags)
+tags <- tags[!is.na(tags)]
 
 ui <- fluidPage(
   
@@ -29,18 +31,19 @@ ui <- fluidPage(
           sidebarLayout(
               sidebarPanel(
                   width = "3",
-                      selectInput("category","Select a category", choices = c("All", "Social", "Technological", "Economic", "Environmental", "Political"), selected = "All"),
+                      pickerInput("tags", "Select one or more tags", sort(tags), options = list(`actions-box` = TRUE), selected= tags, multiple=TRUE),
                       selectInput("date","Select a date", choices = c("All", unique(sort(questions$Date))), selected = "All"),
                       selectInput("location", "Select a location", choices = unique(sort(questions$Location)), selected = "All"),
-                      selectInput("quest","Select a question", choices = c(unique(questions$Question)), selected = "What is your favourite ice cream?")
+                      selectInput("quest","Select a question", choices = c(unique(questions$Question)), selected = "After how many years do you replace your phone?")
               ),
                         
                       mainPanel(
                         width = "6",
-                          # verbatimTextOutput("surveyNameText"),
                           h4(em(textOutput(outputId = "surveyNameText"))),
                           h4(em(textOutput(outputId = "locationText"))),
+                          h4(em(textOutput(outputId = "sampleSizeText"))),
                           h4(em(textOutput(outputId = "dateText"))),
+                          h4(em(textOutput(outputId = "dataTypeText"))),
                           h5(a(textOutput(outputId = "linkText"))),
                           headerPanel(""),
                           DT::dataTableOutput("table"),
@@ -57,9 +60,8 @@ server <- function(input, output, session) {
   observe({
     
     filteredSelections <- questions
-    if(input$category != "All"){
-      filteredSelections <- filter(filteredSelections, Category == input$category)
-    }
+    
+    filteredSelections <- filter(filteredSelections, questions$Tag1 %in% input$tags)
     
     if(input$date != "All"){
       filteredSelections <- filter(filteredSelections, Date == input$date)
@@ -77,28 +79,21 @@ server <- function(input, output, session) {
   output$surveyNameText <- renderText({ paste0("Survey Name: ", questions$Survey_Name[questions$Question == input$quest]) })
   output$locationText <- renderText({ paste0("Location: ", questions$Location[questions$Question == input$quest]) })
   output$dateText <- renderText({ paste0("Date: ", questions$Date[questions$Question == input$quest]) })
+  output$sampleSizeText <- renderText({ paste0("Sample Size: ", length(questionData[, input$quest][!is.na(questionData[, input$quest])])) })
+  output$dataTypeText <- renderText({ paste0("Data Type: ", questions$Data_Type[questions$Question == input$quest]) })
   output$linkText <- renderText({ paste0("Survey Link: ", questions$Link[questions$Question == input$quest]) })
   
   output$table = DT::renderDataTable({
     
     dataType <- questions$Data_Type[questions$Question == input$quest]
     
-    theQ <- input$quest
-    theQ <- str_replace_all(theQ, " ", ".")
-    theQ <- str_replace_all(theQ, "\\?", ".")
-    theQ <- str_replace_all(theQ, "\\,", ".")
-    theQ <- str_replace_all(theQ, "\\:", ".")
-    theQ <- str_replace_all(theQ, '\\"', ".")
-    
-    
     if(dataType == "Categorical"){
-      tbl <- as.data.frame(table(questionData[, theQ]))
+      tbl <- as.data.frame(table(questionData[, input$quest]))
       colnames(tbl) <- c(input$quest , "Count")
-      
     }
     
     if(dataType == "Ratio"){
-      tbl <- as.data.frame(describe(questionData[, theQ]))
+      tbl <- as.data.frame(describe(questionData[, input$quest]))
       tbl = subset(tbl, select = -c(skew, kurtosis, se, trimmed))
     }
     
@@ -109,22 +104,15 @@ server <- function(input, output, session) {
     
     dataType <- questions$Data_Type[questions$Question == input$quest]
     
-    theQ <- input$quest
-    theQ <- str_replace_all(theQ, " ", ".")
-    theQ <- str_replace_all(theQ, "\\?", ".")
-    theQ <- str_replace_all(theQ, "\\,", ".")
-    theQ <- str_replace_all(theQ, "\\:", ".")
-    theQ <- str_replace_all(theQ, '\\"', ".")
-    
     if(dataType == "Categorical"){
-      tbl <- as.data.frame(table(questionData[, theQ]))
+      tbl <- as.data.frame(table(questionData[, input$quest]))
       p <- ggplot(tbl, aes(Var1, Freq, fill = Var1)) +
         geom_bar(stat='identity') + labs(x = input$quest)
     }
     
     if(dataType == "Ratio"){
-      p <- ggplot(questionData, aes(x = questionData[,theQ])) +
-        geom_histogram(binwidth=1, colour="black", fill="blue") + labs(x = input$quest)
+      p <- ggplot(questionData, aes(x = questionData[,input$quest])) +
+        geom_histogram(binwidth=1, colour="black", fill="cadetblue2") + labs(x = input$quest)
     }
     
     p
