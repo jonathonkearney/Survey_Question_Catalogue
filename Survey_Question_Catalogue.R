@@ -32,7 +32,7 @@ ui <- fluidPage(
                       selectInput("category","Select a category", choices = c("All", "Social", "Technological", "Economic", "Environmental", "Political"), selected = "All"),
                       selectInput("date","Select a date", choices = c("All", unique(sort(questions$Date))), selected = "All"),
                       selectInput("location", "Select a location", choices = unique(sort(questions$Location)), selected = "All"),
-                      selectInput("quest","Select a question", choices = c(unique(questions$Question)), selected = "Question1")
+                      selectInput("quest","Select a question", choices = c(unique(questions$Question)), selected = "What is your favourite ice cream?")
               ),
                         
                       mainPanel(
@@ -123,8 +123,8 @@ server <- function(input, output, session) {
     }
     
     if(dataType == "Ratio"){
-      p <- ggplot(questionData, aes(x = questionData[,colnames(questionData)[4]])) +
-        geom_histogram(binwidth=1, colour="blue") + labs(x = input$quest)
+      p <- ggplot(questionData, aes(x = questionData[,theQ])) +
+        geom_histogram(binwidth=1, colour="black", fill="blue") + labs(x = input$quest)
     }
     
     p
