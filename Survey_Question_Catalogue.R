@@ -13,7 +13,7 @@ setwd("C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue")
 
 questions <- read.csv("Questions.csv", header = TRUE)
 
-surveys <- list.files(path = "C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue/Survey_Data", pattern = '.csv$', full.names = T) %>%
+surveys <- list.files(path = "C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue/Fake_Survey_Data", pattern = '.csv$', full.names = T) %>%
   map(read_csv)
 
 questions <- questions %>% mutate_all(na_if,"")
