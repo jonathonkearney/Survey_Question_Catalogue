@@ -87,7 +87,7 @@ server <- function(input, output, session) {
     
     dataType <- questions$Data_Type[questions$Question == input$quest]
     
-    if(dataType == "Categorical"){
+    if(dataType == "Nominal"){
       tbl <- as.data.frame(table(questionData[, input$quest]))
       colnames(tbl) <- c(input$quest , "Count")
     }
@@ -104,7 +104,7 @@ server <- function(input, output, session) {
     
     dataType <- questions$Data_Type[questions$Question == input$quest]
     
-    if(dataType == "Categorical"){
+    if(dataType == "Nominal"){
       tbl <- as.data.frame(table(questionData[, input$quest]))
       p <- ggplot(tbl, aes(Var1, Freq, fill = Var1)) +
         geom_bar(stat='identity') + labs(x = input$quest)
