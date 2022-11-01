@@ -29,7 +29,7 @@ ui <- fluidPage(
           sidebarLayout(
               sidebarPanel(
                   width = "3",
-                      pickerInput("uniqueTags", "Select one or more uniqueTags", sort(uniqueTags), options = list(`actions-box` = TRUE), selected= uniqueTags, multiple=TRUE),
+                      pickerInput("uniqueTags", "Select one or more Tags", sort(uniqueTags), options = list(`actions-box` = TRUE), multiple=TRUE),
                       selectInput("date","Select a date", choices = c("All", unique(sort(questions$Date))), selected = "All"),
                       selectInput("location", "Select a location", choices = unique(sort(questions$Location)), selected = "All"),
                       selectInput("quest","Select a question", choices = c(unique(questions$Question)), selected = "After how many years do you replace your phone?"),
@@ -68,7 +68,10 @@ server <- function(input, output, session) {
     
     filteredSelections <- questions
     
-    filteredSelections <- filter(filteredSelections, questions$Tag1 %in% input$uniqueTags)
+    if(!is.null(input$uniqueTags)){
+      filteredSelections <- filter(filteredSelections, Tag1 %in% input$uniqueTags | Tag2 %in% input$uniqueTags
+                                   | Tag3 %in% input$uniqueTags | Tag4 %in% input$uniqueTags)
+    }
     
     if(input$date != "All"){
       filteredSelections <- filter(filteredSelections, Date == input$date)
