@@ -1,8 +1,8 @@
-Question,Date,Data_Type,Survey_Name,Location,Category
-How many people do you know?,2019,Ratio,Social Habits of New Zealanders,All of NZ,Social
-What is your favourite ice cream?,2020,Categorical,Wellingtonians Favourite Foods,Wellington,Social
-"What came first, the chicken or the egg?",2018,Categorical,The Philosophical Thoughts of Aucklanders,Auckland,Social
-"In seconds, how long can you handstand for?",2020,Ratio,"Acrobatics, A Study",All of NZ,Social
-What is the best Premier League club?,2021,Categorical,Why Arsenal Is The Best Premier League Club,All of NZ,Political
-Do you believe in Climate Change?,2022,Categorical,Opinions on Climate Change,All of NZ,Environmental
-After how many years do you replace your phone?,2022,Ratio,Phone Use in Palmerston North,Palmerston North,Technological
+Question,Date,Data_Type,Survey_Name,Location,Category,Link
+How many people do you know?,2019,Ratio,Social Habits of New Zealanders,All of NZ,Social,www.google.co.nz
+What is your favourite ice cream?,2020,Categorical,Wellingtonians Favourite Foods,Wellington,Social,www.google.co.nz
+"What came first, the chicken or the egg?",2018,Categorical,The Philosophical Thoughts of Aucklanders,Auckland,Social,www.google.co.nz
+"In seconds, how long can you handstand for?",2020,Ratio,"Acrobatics, A Study",All of NZ,Social,www.google.co.nz
+What is the best Premier League club?,2021,Categorical,Why Arsenal Is The Best Premier League Club,All of NZ,Political,www.google.co.nz
+Do you believe in Climate Change?,2022,Categorical,Opinions on Climate Change,All of NZ,Environmental,www.google.co.nz
+After how many years do you replace your phone?,2022,Ratio,Phone Use in Palmerston North,Palmerston North,Technological,www.google.co.nz

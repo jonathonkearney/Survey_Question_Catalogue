@@ -18,6 +18,8 @@ questionData <- read.csv("Question_Data.csv", header = TRUE)
 
 questionData <- questionData %>% mutate_all(na_if,"")
 
+test <- as.data.frame(table(questionData$What.is.the.best.Premier.League.club.))
+
 ui <- fluidPage(
   
   theme = shinytheme("flatly"),
@@ -26,7 +28,7 @@ ui <- fluidPage(
       tabPanel("Survey Questions",
           sidebarLayout(
               sidebarPanel(
-                  width = "4",
+                  width = "3",
                       selectInput("category","Select a category", choices = c("All", "Social", "Technological", "Economic", "Environmental", "Political"), selected = "All"),
                       selectInput("date","Select a date", choices = c("All", unique(sort(questions$Date))), selected = "All"),
                       selectInput("location", "Select a location", choices = unique(sort(questions$Location)), selected = "All"),
@@ -39,8 +41,11 @@ ui <- fluidPage(
                           h4(em(textOutput(outputId = "surveyNameText"))),
                           h4(em(textOutput(outputId = "locationText"))),
                           h4(em(textOutput(outputId = "dateText"))),
+                          h5(a(textOutput(outputId = "linkText"))),
                           headerPanel(""),
-                          DT::dataTableOutput("table")
+                          DT::dataTableOutput("table"),
+                          headerPanel(""),
+                          plotOutput(outputId = "plot",width = "1000px", height = "500px")
                       )
               )
       )
@@ -72,6 +77,7 @@ server <- function(input, output, session) {
   output$surveyNameText <- renderText({ paste0("Survey Name: ", questions$Survey_Name[questions$Question == input$quest]) })
   output$locationText <- renderText({ paste0("Location: ", questions$Location[questions$Question == input$quest]) })
   output$dateText <- renderText({ paste0("Date: ", questions$Date[questions$Question == input$quest]) })
+  output$linkText <- renderText({ paste0("Survey Link: ", questions$Link[questions$Question == input$quest]) })
   
   output$table = DT::renderDataTable({
     
@@ -93,13 +99,37 @@ server <- function(input, output, session) {
     
     if(dataType == "Ratio"){
       tbl <- as.data.frame(describe(questionData[, theQ]))
-      # colnames(tbl) <- c(input$quest , "Count")
       tbl = subset(tbl, select = -c(skew, kurtosis, se, trimmed))
     }
     
-    DT::datatable(tbl, rownames = FALSE, options = list(searching = FALSE, dom = 'f'))
+    DT::datatable(tbl, rownames = FALSE, options = list(searching = FALSE, dom = 'f', pageLength = 25))
   })
 
+  output$plot <- renderPlot({
+    
+    dataType <- questions$Data_Type[questions$Question == input$quest]
+    
+    theQ <- input$quest
+    theQ <- str_replace_all(theQ, " ", ".")
+    theQ <- str_replace_all(theQ, "\\?", ".")
+    theQ <- str_replace_all(theQ, "\\,", ".")
+    theQ <- str_replace_all(theQ, "\\:", ".")
+    theQ <- str_replace_all(theQ, '\\"', ".")
+    
+    if(dataType == "Categorical"){
+      tbl <- as.data.frame(table(questionData[, theQ]))
+      p <- ggplot(tbl, aes(Var1, Freq, fill = Var1)) +
+        geom_bar(stat='identity') + labs(x = input$quest)
+    }
+    
+    if(dataType == "Ratio"){
+      p <- ggplot(questionData, aes(x = questionData[,colnames(questionData)[4]])) +
+        geom_histogram(binwidth=1, colour="blue") + labs(x = input$quest)
+    }
+    
+    p
+    
+  })
 }
 
 shinyApp(ui, server)
