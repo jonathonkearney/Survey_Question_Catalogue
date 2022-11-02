@@ -7,16 +7,21 @@ require(psych)
 
 
 # *********************** LOAD & CLEAN DATA ***************************
-rm(list = ls())
+# rm(list = ls())
 
 setwd("C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue")
 
 questions <- read.csv("Questions.csv", header = TRUE)
 
-surveys <- list.files(path = "C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue/Fake_Survey_Data", pattern = '.csv$', full.names = T) %>%
+# surveys <- list.files(path = "C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue/Fake_Survey_Data", pattern = '.csv$', full.names = T) %>%
+#   map(read_csv)
+
+surveys <- list.files(pattern = '.csv$', full.names = T) %>%
   map(read_csv)
 
 questions <- questions %>% mutate_all(na_if,"")
+questions$Date <- paste0(questions$Date, "/01/01")
+questions$Date <- as.Date(questions$Date)
 
 uniqueTags <- list(questions$Tag1, questions$Tag2, questions$Tag3, questions$Tag4)
 uniqueTags <- Reduce(c,uniqueTags)
@@ -39,9 +44,9 @@ ui <- fluidPage(
               sidebarPanel(
                   width = "3",
                       pickerInput("uniqueTags", "Select one or more Tags", sort(uniqueTags), options = list(`actions-box` = TRUE), selected = uniqueTags, multiple=TRUE),
-                      selectInput("date","Select a date", choices = c("All", unique(sort(questions$Date))), selected = "All"),
+                      sliderInput("date", "Select date range", min = min(questions$Date, na.rm = TRUE), max = max(questions$Date, na.rm = TRUE), value = c(min(questions$Date, na.rm = TRUE), max(questions$Date, na.rm = TRUE))),
                       selectInput("location", "Select a location", choices = unique(sort(questions$Location)), selected = "All"),
-                      selectInput("quest","Select a question", choices = c(unique(questions$Question)), selected = "After how many years do you replace your phone?"),
+                      selectInput("quest","Select a question", choices = c(unique(questions$Question))),
                       h5(em(textOutput(outputId = "surveyNameText"))),
                       h5(em(textOutput(outputId = "locationText"))),
                       h5(em(textOutput(outputId = "sampleSizeText"))),
@@ -84,9 +89,8 @@ server <- function(input, output, session) {
                                    | Tag3 %in% input$uniqueTags | Tag4 %in% input$uniqueTags)
     }
     
-    if(input$date != "All"){
-      filteredSelections <- filter(filteredSelections, Date == input$date)
-    }
+    filteredSelections <- filter(filteredSelections, Date >= input$date[1])
+    filteredSelections <- filter(filteredSelections, Date <= input$date[2])
     
     if(input$location != "All of NZ"){
       filteredSelections <- filter(filteredSelections, Location == input$location)
@@ -101,7 +105,11 @@ server <- function(input, output, session) {
   
   output$surveyNameText <- renderText({ paste0("Survey Name: ", questions$Survey_Name[questions$Question == input$quest]) })
   output$locationText <- renderText({ paste0("Location: ", questions$Location[questions$Question == input$quest]) })
-  output$dateText <- renderText({ paste0("Date: ", questions$Date[questions$Question == input$quest]) })
+  output$dateText <- renderText({
+    date <- questions$Date[questions$Question == input$quest]
+    date <- substring(date, 1, 4)
+    paste0("Date: ", date)
+  })
   output$sampleSizeText <- renderText({
     DFLocation <- which(sapply(surveys, function(x) any(names(x) == input$quest)))
     survey <- as.data.frame(surveys[DFLocation], check.names=FALSE)
@@ -154,10 +162,17 @@ server <- function(input, output, session) {
       output$table <- renderTable({
         tbl
       })
+      # output$plot <- renderPlot({
+      #   ggplot(survey, aes(x = survey[,input$quest])) +
+      #     geom_density(color = 4,
+      #                  fill = 4,
+      #                  alpha = 0.25,
+      #                  adjust = 0.005)
+      # })
       
       output$plot <- renderPlot({
         ggplot(survey, aes(x = survey[,input$quest])) +
-          geom_histogram(binwidth=1, colour="black", fill="cadetblue2") + labs(x = input$quest)
+          geom_histogram(colour="black", fill="cadetblue2", na.rm = TRUE) + labs(x = input$quest)
       })
     }
   })
