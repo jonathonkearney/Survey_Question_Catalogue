@@ -66,11 +66,6 @@ ui <- fluidPage(
       }
       "))
   ),
-  # setBackgroundColor(
-  #   color = "#FAF9F8",
-  #   gradient = "linear",
-  #   direction = "bottom"
-  # ),
   theme = shinytheme("flatly"),
   navbarPage("Survey Questions Catalogue",
       tabPanel("Question Viewer",
@@ -112,15 +107,11 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
-  dataType <- "Unknown"
-  
-  observe({
-    dataType <- questions$Data_Type[questions$Question == input$quest]
-  })
-  
   # *********************** DYNAMIC INPUTS ***************************
   
   observe({
+    
+    currentQuestion <- input$quest
     
     filteredSelections <- questions
     
@@ -136,9 +127,13 @@ server <- function(input, output, session) {
       filteredSelections <- filter(filteredSelections, Location == input$location)
     }
     
-    updateSelectInput(session, "quest",
-                      choices = unique(filteredSelections$Question)
-    )
+    currentChoices <- unique(filteredSelections$Question)
+    
+    if(currentQuestion %in% currentChoices){
+      updateSelectInput(session, "quest", choices = unique(filteredSelections$Question), selected = currentQuestion)
+    }else{
+      updateSelectInput(session, "quest",choices = unique(filteredSelections$Question))
+    }
   })
   
   # *********************** SURVEY INFORMATION ***************************
@@ -180,7 +175,6 @@ server <- function(input, output, session) {
       return("Data Quality: Average")
     }
     
-  
   })
   
   # *********************** DATA TYPES ***************************
