@@ -1,7 +1,6 @@
 library(tidyverse)
 library(shiny)
 library(shinythemes)
-library(DT)
 library(shinyWidgets)
 library(psych)
 library(gt)
@@ -9,7 +8,7 @@ library(shinyjs)
 
 
 # *********************** LOAD & CLEAN DATA ***************************
-# rm(list = ls())
+rm(list = ls())
 
 # setwd("C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue")
 
@@ -30,35 +29,52 @@ uniqueTags <- Reduce(c,uniqueTags)
 uniqueTags <- unique(uniqueTags)
 uniqueTags <- uniqueTags[!is.na(uniqueTags)]
 
+DFLocation <- which(sapply(surveys, function(x) any(names(x) == "What is your favourite ice cream?")))
+survey <- as.data.frame(surveys[DFLocation], check.names=FALSE)
+test <- as.data.frame(table(survey[, "What is your favourite ice cream?"]))
+colnames(test) <- c("What is your favourite ice cream?" , "Count")
+test %>% mutate(Percentage = round(Count/sum(Count),2))
+
 ui <- fluidPage(
   useShinyjs(),
   tags$head(
     tags$style(HTML("
-      .col-sm-6 {
-        margin-left: 15px;
+      #mainPanel {
+        margin-left: 1vw;
       }
-      .table {
-        padding:9.5px;
+      #tableCol {
+        width: 100%;
+      }
+      #preCol {
+        width: 100%;
+      }
+      #table {
+        padding:0.8vw;
         box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 4px;
         background-color: #ecf0f185;
         border: 1px solid transparent;
+        width: 100%;
+        margin-bottom: 0.4vw;
       }
       #plot {
-        margin-left: -40px;
+        margin-left: -2vw;
+      }
+      img {
+        width: 55vw;
       }
       pre {
         font-family: 'Archivo Black', sans-serif;
         font-weight: bold;
-        font-size: 25px;
+        font-size: 1.3vw;
         text-align: center;
         color: #FFFFFF;
         background-color: #098ebb;
-        width: 120px;
-        height: 80px;
-        padding:9.5px;
-        margin: 3.5px;
-        margin-bottom: 15px;
-        line-height:30px;
+        width: 6vw;
+        height: 4.5vw;
+        padding:0.6vw;
+        margin: 0.2vw;
+        margin-bottom: 0.4vw;
+        line-height:1.5vw;
         border:0px solid rgba(0,0,0,0.15);
         border-radius:4px;
         box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
@@ -86,19 +102,29 @@ ui <- fluidPage(
                     headerPanel(""),
               ),
               mainPanel(
-                width = "6",
+                id = "mainPanel",
+                width = "7",
                 h2(textOutput(outputId = "questionNameText")),
                 HTML("<hr>"),
-                h5(verbatimTextOutput(outputId = "nTextBox")),
-                h5(verbatimTextOutput(outputId = "meanTextBox")),
-                h5(verbatimTextOutput(outputId = "medianTextBox")),
-                h5(verbatimTextOutput(outputId = "sdTextBox")),
-                h5(verbatimTextOutput(outputId = "madTextBox")),
-                h5(verbatimTextOutput(outputId = "minTextBox")),
-                h5(verbatimTextOutput(outputId = "maxTextBox")),
-                tableOutput("table"),
+                column(6,
+                  id = "preCol",
+                  verbatimTextOutput(outputId = "nTextBox"),
+                  verbatimTextOutput(outputId = "meanTextBox"),
+                  verbatimTextOutput(outputId = "medianTextBox"),
+                  verbatimTextOutput(outputId = "sdTextBox"),
+                  verbatimTextOutput(outputId = "madTextBox"),
+                  verbatimTextOutput(outputId = "minTextBox"),
+                  verbatimTextOutput(outputId = "maxTextBox"),
+                ),
+                column(6,
+                   id = "tableCol",
+                   tableOutput("table"),
+                ),
                 HTML("<hr>"),
-                plotOutput(outputId = "plot", width = "1000px", height = "500px"),
+                column(6,
+                  id = "plotCol",
+                  plotOutput(outputId = "plot", width = "1000px", height = "500px"),
+                ),
               )
           )
       ),
@@ -109,9 +135,6 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  
-  # *********************** RANDOMISE DEFAULT QUESTION ***************************
-  
   
   # *********************** DYNAMIC INPUTS ***************************
   
@@ -204,15 +227,16 @@ server <- function(input, output, session) {
       
       tbl <- as.data.frame(table(survey[, input$quest]))
       colnames(tbl) <- c(input$quest , "Count")
-      
+      tbl <- tbl %>% mutate(Percentage = round(Count/sum(Count),2))
+      tbl$Percentage <- paste0(tbl$Percentage * 100, "%")
       
       output$table <- renderTable({
         tbl
-      })
+      },width = NULL)
       
       output$plot <- renderPlot({
         ggplot(tbl, aes(tbl[, input$quest], Count , fill = tbl[, input$quest])) +
-          geom_bar(stat='identity') + labs(x = input$quest, fill = input$quest, title = "Responses by Category") + 
+          geom_bar(stat='identity') + labs(x = input$quest, fill = input$quest) + 
           theme(plot.title = element_text(family = "sans", size = 22, margin=margin(0,0,12,0)))
       })
     }
@@ -250,7 +274,7 @@ server <- function(input, output, session) {
       
       output$plot <- renderPlot({
         ggplot(survey, aes(x = survey[,input$quest])) +
-          geom_histogram(colour="black", fill="cadetblue2", na.rm = TRUE) + labs(x = input$quest, title = "Response Distribution") +
+          geom_histogram(colour="black", fill="cadetblue2", na.rm = TRUE) + labs(x = input$quest) +
           theme(plot.title = element_text(family = "sans", size = 22, margin=margin(0,0,12,0)))
       })
     }
