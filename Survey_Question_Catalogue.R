@@ -75,7 +75,7 @@ ui <- fluidPage(
                     pickerInput("uniqueTags", "Select one or more Tags", sort(uniqueTags), options = list(`actions-box` = TRUE), selected = uniqueTags, multiple=TRUE),
                     sliderInput("date", "Select date range", min = min(questions$Date, na.rm = TRUE), max = max(questions$Date, na.rm = TRUE), value = c(min(questions$Date, na.rm = TRUE), max(questions$Date, na.rm = TRUE))),
                     selectInput("location", "Select a location", choices = unique(sort(questions$Location)), selected = "All"),
-                    selectInput("quest","Select a question", choices = c(unique(questions$Question))),
+                    selectInput("quest","Select a question", choices = c(unique(questions$Question)), selected = sample(questions$Question, 1)),
                     h5(em(textOutput(outputId = "surveyNameText"))),
                     h5(em(textOutput(outputId = "locationText"))),
                     h5(em(textOutput(outputId = "sampleSizeText"))),
@@ -100,12 +100,18 @@ ui <- fluidPage(
                 HTML("<hr>"),
                 plotOutput(outputId = "plot", width = "1000px", height = "500px"),
               )
-              )
+          )
+      ),
+      tabPanel("About this Tool",
+      
       )
   )
 )
 
 server <- function(input, output, session) {
+  
+  # *********************** RANDOMISE DEFAULT QUESTION ***************************
+  
   
   # *********************** DYNAMIC INPUTS ***************************
   
