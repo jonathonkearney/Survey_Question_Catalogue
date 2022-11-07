@@ -12,7 +12,7 @@ library(syuzhet)
 # *********************** LOAD & CLEAN DATA ***************************
 rm(list = ls())
 
-setwd("C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue")
+# setwd("C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue")
 
 questions <- read.csv("Questions.csv", header = TRUE)
 
@@ -31,29 +31,19 @@ uniqueTags <- Reduce(c,uniqueTags)
 uniqueTags <- unique(uniqueTags)
 uniqueTags <- uniqueTags[!is.na(uniqueTags)]
 
-
-DFLocation <- which(sapply(surveys, function(x) any(names(x) == "How are you feeling?")))
-survey <- as.data.frame(surveys[DFLocation], check.names=FALSE)
-openEnders <- gsub("'t|'s|'t|'re", "", survey[, "How are you feeling?"])
-openEnders <- gsub("[(),.?:]", " ", openEnders)
-words <- strsplit(openEnders, " ", fixed = T)
-words <- unlist(words)
-words <- tolower(words)
-counts <- as.data.frame(table(words))
-counts <- counts[!(counts$words ==""),]
-cVector <- as.character(counts$words)
-test <- get_nrc_sentiment(cVector)
-test <- as.data.frame(colSums(test))
-colnames(test)[1] <- "Count"
-test <- tibble::rownames_to_column(test, "Emotion")
-
-
 ui <- fluidPage(
   useShinyjs(),
   tags$head(
     tags$style(HTML("
       #mainPanel {
         margin-left: 1vw;
+      }
+      #questionNameText {
+        font-weight: 700;
+        font-family: 'Poppins', sans-serif;
+      }
+      #surveyNameText2 {
+        font-family: 'Poppins', sans-serif;
       }
       #tableCol {
         width: 100%;
@@ -66,11 +56,11 @@ ui <- fluidPage(
         box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 4px;
         background-color: #ecf0f185;
         border: 1px solid transparent;
-        width: 100%;
+        width: 75%;
         margin-bottom: 0.4vw;
       }
-      #table {
-        margin-bottom: 0.4vw;
+      #wordcloud {
+        margin-bottom: 1vw;
       }
       #plot {
         margin-left: -2vw;
@@ -96,6 +86,9 @@ ui <- fluidPage(
         box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
         float: left;
       }
+      .filter-option-inner-inner{
+        color: white;
+      }
       "))
   ),
   theme = shinytheme("flatly"),
@@ -107,6 +100,7 @@ ui <- fluidPage(
                     pickerInput("uniqueTags", "Select one or more Tags", sort(uniqueTags), options = list(`actions-box` = TRUE), selected = uniqueTags, multiple=TRUE),
                     sliderInput("date", "Select date range", min = min(questions$Date, na.rm = TRUE), max = max(questions$Date, na.rm = TRUE), value = c(min(questions$Date, na.rm = TRUE), max(questions$Date, na.rm = TRUE))),
                     selectInput("location", "Select a location", choices = unique(sort(questions$Location)), selected = "All"),
+                    selectInput("survey", "Select a survey", choices = c("All Surveys", unique(sort(questions$Survey_Name))), selected = "All"),
                     selectInput("quest","Select a question", choices = c(unique(questions$Question)), selected = sample(questions$Question, 1)),
                     h5(em(textOutput(outputId = "surveyNameText"))),
                     h5(em(textOutput(outputId = "locationText"))),
@@ -121,6 +115,7 @@ ui <- fluidPage(
                 id = "mainPanel",
                 width = "7",
                 h2(textOutput(outputId = "questionNameText")),
+                h4(em(textOutput(outputId = "surveyNameText2"))),
                 HTML("<hr>"),
                 column(6,
                   id = "preCol",
@@ -173,6 +168,10 @@ server <- function(input, output, session) {
       filteredSelections <- filter(filteredSelections, Location == input$location)
     }
     
+    if(input$survey != "All Surveys"){
+      filteredSelections <- filter(filteredSelections, Survey_Name == input$survey)
+    }
+    
     currentChoices <- unique(filteredSelections$Question)
     
     if(currentQuestion %in% currentChoices){
@@ -204,6 +203,7 @@ server <- function(input, output, session) {
   })
   
   output$questionNameText <- renderText({ questions$Question[questions$Question == input$quest] })
+  output$surveyNameText2 <- renderText({ questions$Survey_Name[questions$Question == input$quest] })
   
   output$qualityText <- renderText({
     dataQuality <- questions$Quality[questions$Question == input$quest]
@@ -316,10 +316,11 @@ server <- function(input, output, session) {
       sentiment <- as.data.frame(colSums(sentiment))
       colnames(sentiment)[1] <- "Count"
       sentiment <- tibble::rownames_to_column(sentiment, "Emotion")
+      sentiment$Emotion <- str_to_sentence(sentiment$Emotion)
       
       output$plot <- renderPlot({
-        ggplot(data=sentiment, aes(x=Emotion, y=Count, fill=Emotion)) +
-          geom_bar(stat="identity")
+        ggplot(data=sentiment, aes(x=Emotion, y=Count, fill=factor(ifelse(Emotion == "Positive" | Emotion == 'Negative' ,"Highlighted","Normal")))) +
+          geom_bar(stat="identity", show.legend = FALSE)
       })
       
       output$wordcloud <- renderWordcloud2({
