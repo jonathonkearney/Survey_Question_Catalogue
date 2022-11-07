@@ -12,7 +12,7 @@ library(syuzhet)
 # *********************** LOAD & CLEAN DATA ***************************
 rm(list = ls())
 
-# setwd("C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue")
+setwd("C:/Users/OEM/OneDrive/Documents/R/Survey_Question_Catalogue")
 
 questions <- read.csv("Questions.csv", header = TRUE)
 
@@ -230,7 +230,7 @@ server <- function(input, output, session) {
     DFLocation <- which(sapply(surveys, function(x) any(names(x) == input$quest)))
     survey <- as.data.frame(surveys[DFLocation], check.names=FALSE)
     
-    if(dataType == "Nominal"){
+    if(dataType == "Discrete"){
       
       hide(id = "wordcloud")
       hide(id = "nTextBox")
@@ -259,15 +259,7 @@ server <- function(input, output, session) {
       })
     }
     
-    if(dataType == "Ordinal"){
-      
-    }
-    
-    if(dataType == "Interval"){
-      
-    }
-    
-    if(dataType == "Ratio"){
+    if(dataType == "Continuous"){
       
       hide(id = "table")
       hide(id = "wordcloud")
@@ -297,7 +289,7 @@ server <- function(input, output, session) {
           theme(plot.title = element_text(family = "sans", size = 22, margin=margin(0,0,12,0)))
       })
     }
-    if(dataType == "Open-Ended"){
+    if(dataType == "Open"){
       
       hide(id = "table")
       show(id = "plot")

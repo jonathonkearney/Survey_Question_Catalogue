@@ -1,10 +1,10 @@
 Question,Date,Data_Type,Quality,Survey_Name,Location,Tag1,Tag2,Tag3,Tag4,Link
-What is your favourite ice cream?,2020,Nominal,Good,Wellingtonians Favourite Foods,Wellington,Food,,,,www.google.co.nz
-"What came first, the chicken or the egg?",2018,Nominal,Great,The Philosophical Thoughts of Aucklanders,Auckland,Philosophy,Animals,,,www.google.co.nz
-"In seconds, how long can you handstand for?",2020,Ratio,Average,"Acrobatics, A Study",All of NZ,Athleticism,,,,www.google.co.nz
-What is the best Premier League club?,2021,Nominal,Good,Why Arsenal Is The Best Premier League Club,All of NZ,Football,Sport,,,www.google.co.nz
-Do you believe in Climate Change?,2022,Nominal,Great,Opinions on Climate Change,All of NZ,Climate,Environment,,,www.google.co.nz
-After how many years do you replace your phone?,2022,Ratio,Average,Phone Use in Palmerston North,Palmerston North,Technology,Communication,,,www.google.co.nz
-What colour is your car?,2015,Nominal,Bad,Cars in Christchurch,Christchurch,Transport,Technology,,,www.google.co.nz
-How many people do you know?,2019,Ratio,Good,Social Habits of New Zealanders,All of NZ,Social,Friends,,,www.google.co.nz
-How are you feeling?,2022,Open-Ended,Average,How we're all feeling,Hamilton,Social,Health,,,www.google.co.nz
+What is your favourite ice cream?,2020,Discrete,Good,Wellingtonians Favourite Foods,Wellington,Food,,,,www.google.co.nz
+"What came first, the chicken or the egg?",2018,Discrete,Great,The Philosophical Thoughts of Aucklanders,Auckland,Philosophy,Animals,,,www.google.co.nz
+"In seconds, how long can you handstand for?",2020,Continuous,Average,"Acrobatics, A Study",All of NZ,Athleticism,,,,www.google.co.nz
+What is the best Premier League club?,2021,Discrete,Good,Why Arsenal Is The Best Premier League Club,All of NZ,Football,Sport,,,www.google.co.nz
+Do you believe in Climate Change?,2022,Discrete,Great,Opinions on Climate Change,All of NZ,Climate,Environment,,,www.google.co.nz
+After how many years do you replace your phone?,2022,Continuous,Average,Phone Use in Palmerston North,Palmerston North,Technology,Communication,,,www.google.co.nz
+What colour is your car?,2015,Discrete,Bad,Cars in Christchurch,Christchurch,Transport,Technology,,,www.google.co.nz
+How many people do you know?,2019,Continuous,Good,Social Habits of New Zealanders,All of NZ,Social,Friends,,,www.google.co.nz
+How are you feeling?,2022,Open,Average,How we're all feeling,Hamilton,Social,Health,,,www.google.co.nz
