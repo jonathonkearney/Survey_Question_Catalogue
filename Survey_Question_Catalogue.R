@@ -5,6 +5,8 @@ library(shinyWidgets)
 library(psych)
 library(gt)
 library(shinyjs)
+library(wordcloud2)
+library(syuzhet)
 
 
 # *********************** LOAD & CLEAN DATA ***************************
@@ -29,11 +31,22 @@ uniqueTags <- Reduce(c,uniqueTags)
 uniqueTags <- unique(uniqueTags)
 uniqueTags <- uniqueTags[!is.na(uniqueTags)]
 
-DFLocation <- which(sapply(surveys, function(x) any(names(x) == "What is your favourite ice cream?")))
+
+DFLocation <- which(sapply(surveys, function(x) any(names(x) == "How are you feeling?")))
 survey <- as.data.frame(surveys[DFLocation], check.names=FALSE)
-test <- as.data.frame(table(survey[, "What is your favourite ice cream?"]))
-colnames(test) <- c("What is your favourite ice cream?" , "Count")
-test %>% mutate(Percentage = round(Count/sum(Count),2))
+openEnders <- gsub("'t|'s|'t|'re", "", survey[, "How are you feeling?"])
+openEnders <- gsub("[(),.?:]", " ", openEnders)
+words <- strsplit(openEnders, " ", fixed = T)
+words <- unlist(words)
+words <- tolower(words)
+counts <- as.data.frame(table(words))
+counts <- counts[!(counts$words ==""),]
+cVector <- as.character(counts$words)
+test <- get_nrc_sentiment(cVector)
+test <- as.data.frame(colSums(test))
+colnames(test)[1] <- "Count"
+test <- tibble::rownames_to_column(test, "Emotion")
+
 
 ui <- fluidPage(
   useShinyjs(),
@@ -54,6 +67,9 @@ ui <- fluidPage(
         background-color: #ecf0f185;
         border: 1px solid transparent;
         width: 100%;
+        margin-bottom: 0.4vw;
+      }
+      #table {
         margin-bottom: 0.4vw;
       }
       #plot {
@@ -119,6 +135,7 @@ ui <- fluidPage(
                 column(6,
                    id = "tableCol",
                    tableOutput("table"),
+                   wordcloud2Output('wordcloud'),
                 ),
                 HTML("<hr>"),
                 column(6,
@@ -215,6 +232,7 @@ server <- function(input, output, session) {
     
     if(dataType == "Nominal"){
       
+      hide(id = "wordcloud")
       hide(id = "nTextBox")
       hide(id = "meanTextBox")
       hide(id = "medianTextBox")
@@ -252,6 +270,7 @@ server <- function(input, output, session) {
     if(dataType == "Ratio"){
       
       hide(id = "table")
+      hide(id = "wordcloud")
       show(id = "nTextBox")
       show(id = "meanTextBox")
       show(id = "medianTextBox")
@@ -277,6 +296,44 @@ server <- function(input, output, session) {
           geom_histogram(colour="black", fill="cadetblue2", na.rm = TRUE) + labs(x = input$quest) +
           theme(plot.title = element_text(family = "sans", size = 22, margin=margin(0,0,12,0)))
       })
+    }
+    if(dataType == "Open-Ended"){
+      
+      hide(id = "table")
+      show(id = "plot")
+      hide(id = "nTextBox")
+      hide(id = "meanTextBox")
+      hide(id = "medianTextBox")
+      hide(id = "sdTextBox")
+      hide(id = "madTextBox")
+      hide(id = "minTextBox")
+      hide(id = "maxTextBox")
+      show(id = "wordcloud")
+      
+      # openEnders
+      openEnders <- gsub("'t|'s|'t|'re", "", survey[, input$quest])
+      openEnders <- gsub("[(),.?:]", " ", openEnders)
+      words <- strsplit(openEnders, " ", fixed = T)
+      words <- unlist(words)
+      words <- tolower(words)
+      counts <- as.data.frame(table(words))
+      counts <- counts[!(counts$words ==""),]
+
+      cVector <- as.character(counts$words)
+      sentiment <- get_nrc_sentiment(cVector)
+      sentiment <- as.data.frame(colSums(sentiment))
+      colnames(sentiment)[1] <- "Count"
+      sentiment <- tibble::rownames_to_column(sentiment, "Emotion")
+      
+      output$plot <- renderPlot({
+        ggplot(data=sentiment, aes(x=Emotion, y=Count, fill=Emotion)) +
+          geom_bar(stat="identity")
+      })
+      
+      output$wordcloud <- renderWordcloud2({
+        wordcloud2(counts, size=1.6)
+      })
+      
     }
   })
 }
